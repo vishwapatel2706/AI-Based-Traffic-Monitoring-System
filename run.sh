@@ -1,56 +1,73 @@
 #!/bin/bash
-# Quick Start Script for Frontend - Linux/Mac
-# Run this script to start the React development server
+# Quick Start Script for Backend - Linux/Mac
+# Run this script to automatically start the backend server
 
 echo ""
 echo "================================"
 echo " Traffic Vehicle Classifier"
-echo " Frontend Start Script"
+echo " Backend Start Script"
 echo "================================"
 echo ""
 
-# Check if Node.js is installed
-if ! command -v node &> /dev/null; then
-    echo "[ERROR] Node.js is not installed"
-    echo "Please install Node.js from https://nodejs.org/"
+# Check if Python is installed
+if ! command -v python3 &> /dev/null; then
+    echo "[ERROR] Python 3 is not installed"
+    echo "Please install Python 3.8 or higher"
     exit 1
 fi
 
-echo "[INFO] Node.js is installed"
-node --version
-npm --version
+echo "[INFO] Python is installed"
+python3 --version
 
-# Check if node_modules exists
-if [ ! -d "node_modules" ]; then
-    echo "[WARNING] node_modules not found"
-    echo "Installing dependencies..."
-    npm install
-    if [ $? -ne 0 ]; then
-        echo "[ERROR] Failed to install dependencies"
-        exit 1
-    fi
+# Check if models folder exists
+if [ ! -d "models" ]; then
+    echo "[WARNING] models folder not found"
+    echo "Creating models folder..."
+    mkdir -p models
 fi
 
-# Check if backend is running
+# Check if model files exist
+if [ ! -f "models/traffic_model.keras" ]; then
+    echo "[ERROR] models/traffic_model.keras not found"
+    echo "Please download from Google Drive and place in models/ folder"
+fi
+
+if [ ! -f "models/label_encoder.pkl" ]; then
+    echo "[ERROR] models/label_encoder.pkl not found"
+    echo "Please download from Google Drive and place in models/ folder"
+fi
+
+# Check if uploads folder exists
+if [ ! -d "uploads" ]; then
+    echo "[INFO] Creating uploads folder..."
+    mkdir -p uploads
+fi
+
+# Check if requirements are installed
 echo ""
-echo "[INFO] Checking if backend is running..."
-if ! curl -s http://localhost:5000/api/health > /dev/null 2>&1; then
-    echo "[WARNING] Backend server is not running"
-    echo "Start it in another terminal using: cd backend && python3 app.py"
-    echo ""
+echo "[INFO] Checking if dependencies are installed..."
+python3 -c "import flask" 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo "[WARNING] Dependencies not installed"
+    echo "Installing requirements..."
+    pip3 install -r requirements.txt
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] Failed to install requirements"
+        exit 1
+    fi
 fi
 
 # Make script executable
 chmod +x run.sh 2>/dev/null
 
-# Start React development server
+# Start Flask server
 echo ""
 echo "================================"
-echo "[INFO] Starting React development server..."
+echo "[INFO] Starting Flask server..."
 echo "================================"
 echo ""
-echo "Application will open at: http://localhost:3000"
+echo "Server will run at: http://localhost:5000"
 echo "Press Ctrl+C to stop the server"
 echo ""
 
-npm start
+python3 app.py

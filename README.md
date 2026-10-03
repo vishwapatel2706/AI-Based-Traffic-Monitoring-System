@@ -1,147 +1,161 @@
-## Frontend - React App
+## Backend API - Flask Server
 
-This is the web interface for the Traffic Vehicle Classifier system.
+This is the backend API for the Traffic Vehicle Classifier system.
 
 ### Prerequisites
 
-- Node.js 14+ (includes npm)
-- Backend server running on `http://localhost:5000`
+- Python 3.8+
+- pip package manager
 
 ### Setup Instructions
 
-1. **Install dependencies:**
+1. **Create a models folder:**
    ```bash
-   npm install
+   mkdir models
    ```
 
-2. **Start the development server:**
+2. **Copy trained model files:**
+   - Download `traffic_model.keras` from Google Drive and place it in the `models/` folder
+   - Download `label_encoder.pkl` from Google Drive and place it in the `models/` folder
+
+3. **Install dependencies:**
    ```bash
-   npm start
+   pip install -r requirements.txt
    ```
 
-   The app will automatically open at `http://localhost:3000`
+   > **Note:** TensorFlow is included in requirements.txt. If you have GPU support, you can optionally install:
+   > ```bash
+   > pip install tensorflow-gpu
+   > ```
 
-3. **Build for production:**
-   ```bash
-   npm run build
-   ```
+### Running the Server
 
-   This creates an optimized production build in the `build/` folder.
+Start the Flask development server:
 
-### Features
-
-- 📸 **Image Upload**: Drag-and-drop or click to upload vehicle images
-- 🔗 **URL Input**: Analyze images directly from URLs
-- 🎯 **Real-time Predictions**: Instant vehicle classification
-- 📊 **Confidence Scores**: View prediction confidence for all classes
-- ⚠️ **Priority Indicators**: Emergency vehicle detection with priority levels
-- 🎨 **Beautiful UI**: Modern, responsive interface
-
-### How to Use
-
-1. **Start the backend server** (see backend README)
-2. **Start the frontend app** (`npm start`)
-3. **Upload an image:**
-   - Drag and drop a vehicle image onto the upload area, OR
-   - Click to select a file, OR
-   - Switch to "From URL" tab and paste an image URL
-4. **View results:**
-   - See predicted vehicle type
-   - Check confidence percentage
-   - View priority level for emergency vehicles
-   - See probabilities for all possible classes
-
-### Project Structure
-
-```
-frontend/
-├── public/
-│   └── index.html              # Main HTML file
-├── src/
-│   ├── components/
-│   │   ├── ImageUploader.js     # File/URL upload component
-│   │   ├── ImageUploader.css
-│   │   ├── PredictionResult.js  # Results display component
-│   │   ├── PredictionResult.css
-│   │   ├── ClassesList.js       # Available classes component
-│   │   └── ClassesList.css
-│   ├── App.js                   # Main app component
-│   ├── App.css
-│   ├── index.js                 # React entry point
-│   └── index.css                # Global styles
-├── package.json
-└── README.md
+```bash
+python app.py
 ```
 
-### API Connection
+The server will run on `http://localhost:5000`
 
-The frontend connects to the backend at `http://localhost:5000/api`
+You should see output like:
+```
+Loading model...
+✅ Model loaded from models/traffic_model.keras
+✅ Label encoder loaded from models/label_encoder.pkl
 
-If you want to use a different backend URL, edit `App.js`:
-
-```javascript
-const API_URL = 'http://your-backend-url:5000/api';
+🚀 Starting Flask server...
+ * Running on http://0.0.0.0:5000
 ```
 
-### Supported Image Formats
+### API Endpoints
 
-- JPG / JPEG
-- PNG
-- GIF
+#### 1. Health Check
+```
+GET /api/health
+```
+Returns server and model status.
 
-Maximum recommended image size: 10 MB
+**Response:**
+```json
+{
+  "status": "ok",
+  "model_loaded": true,
+  "encoder_loaded": true
+}
+```
 
-### Browser Support
+#### 2. Get Available Classes
+```
+GET /api/classes
+```
+Returns list of vehicle classes the model can recognize.
 
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
+**Response:**
+```json
+{
+  "classes": ["ambulance", "fire_truck", "police", "car", "bus"]
+}
+```
+
+#### 3. Predict from Image Upload
+```
+POST /api/predict
+Content-Type: multipart/form-data
+```
+Analyzes an uploaded image and returns vehicle prediction.
+
+**Request:**
+- `file`: Image file (JPG, PNG, GIF)
+
+**Response:**
+```json
+{
+  "success": true,
+  "predicted_vehicle": "ambulance",
+  "confidence": 95.32,
+  "priority": "🚑 HIGH PRIORITY",
+  "all_predictions": {
+    "ambulance": 95.32,
+    "fire_truck": 3.21,
+    "police": 1.47,
+    "car": 0.00,
+    "bus": 0.00
+  }
+}
+```
+
+#### 4. Predict from Image URL
+```
+POST /api/predict-url
+Content-Type: application/json
+```
+Analyzes an image from a URL.
+
+**Request:**
+```json
+{
+  "url": "https://example.com/image.jpg"
+}
+```
+
+**Response:** Same as `/api/predict`
 
 ### Troubleshooting
 
-1. **"API Offline" message:**
-   - Make sure backend server is running on `http://localhost:5000`
-   - Check that `app.py` is executed without errors
+1. **"Model not found" error:**
+   - Make sure you've created the `models/` folder
+   - Verify `traffic_model.keras` and `label_encoder.pkl` are in the `models/` folder
 
-2. **Port 3000 already in use:**
+2. **Port 5000 already in use:**
    ```bash
-   # Use a different port
-   PORT=3001 npm start
+   # Change port in app.py or use:
+   python app.py --port 5001
    ```
 
-3. **Images not uploading:**
-   - Check browser console for errors (F12)
-   - Ensure backend is running and accessible
-   - Verify CORS is enabled in backend
+3. **CORS errors in frontend:**
+   - The backend already has CORS enabled
+   - Check that the frontend is using `http://localhost:5000/api` as the API URL
 
-4. **Slow predictions:**
-   - This is normal for the first prediction (model loading)
-   - Subsequent predictions are faster (cached in GPU/CPU)
+4. **TensorFlow import error:**
+   ```bash
+   pip install --upgrade tensorflow
+   ```
 
-### Development Commands
+### Configuration
 
-```bash
-npm start         # Start dev server (port 3000)
-npm run build     # Build for production
-npm test          # Run tests (if configured)
-npm run eject     # Expose webpack config (⚠️ irreversible)
+Edit these variables in `app.py` to customize:
+
+```python
+UPLOAD_FOLDER = 'uploads'      # Where uploaded files are saved
+ALLOWED_EXTENSIONS = {...}    # Allowed file types
+IMAGE_SIZE = 96                # Must match model training size
 ```
 
-### Tips
+### Development Notes
 
-- The model is optimized for 96x96 images but accepts any size
-- Clearer, well-lit images produce better predictions
-- Multiple vehicles in frame: model predicts the most prominent one
-- Use the URL tab to test with external images without uploading
-
-### Environment Variables
-
-Create a `.env` file in the frontend folder to customize:
-
-```
-REACT_APP_API_URL=http://localhost:5000/api
-```
-
-Then update `App.js` to use: `process.env.REACT_APP_API_URL`
+- The model expects 96x96 RGB images
+- All images are automatically normalized to [0, 1] range
+- Predictions include confidence scores for all classes
+- Emergency vehicles (ambulance, fire_truck) are marked as HIGH PRIORITY
 

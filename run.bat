@@ -1,59 +1,75 @@
 @echo off
-REM Quick Start Script for Frontend - Windows
-REM Run this script to start the React development server
+REM Quick Start Script for Backend - Windows
+REM Run this script to automatically start the backend server
 
 echo.
 echo ================================
 echo  Traffic Vehicle Classifier
-echo  Frontend Start Script
+echo  Backend Start Script
 echo ================================
 echo.
 
-REM Check if Node.js is installed
-node --version >nul 2>&1
+REM Check if Python is installed
+python --version >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] Node.js is not installed or not in PATH
-    echo Please install Node.js from https://nodejs.org/
+    echo [ERROR] Python is not installed or not in PATH
+    echo Please install Python 3.8 or higher
     pause
     exit /b 1
 )
 
-echo [INFO] Node.js is installed
-node --version
-npm --version
+echo [INFO] Python is installed
+python --version
 
-REM Check if node_modules exists
-if not exist "node_modules" (
-    echo [WARNING] node_modules not found
-    echo Installing dependencies...
-    call npm install
+REM Check if models folder exists
+if not exist "models" (
+    echo [WARNING] models folder not found
+    echo Creating models folder...
+    mkdir models
+)
+
+REM Check if model files exist
+if not exist "models\traffic_model.keras" (
+    echo [ERROR] models/traffic_model.keras not found
+    echo Please download from Google Drive and place in models/ folder
+)
+
+if not exist "models\label_encoder.pkl" (
+    echo [ERROR] models/label_encoder.pkl not found
+    echo Please download from Google Drive and place in models/ folder
+)
+
+REM Check if uploads folder exists
+if not exist "uploads" (
+    echo [INFO] Creating uploads folder...
+    mkdir uploads
+)
+
+REM Check if requirements are installed
+echo.
+echo [INFO] Checking if dependencies are installed...
+python -c "import flask" >nul 2>&1
+if errorlevel 1 (
+    echo [WARNING] Dependencies not installed
+    echo Installing requirements...
+    pip install -r requirements.txt
     if errorlevel 1 (
-        echo [ERROR] Failed to install dependencies
+        echo [ERROR] Failed to install requirements
         pause
         exit /b 1
     )
 )
 
-REM Check if backend is running
-echo.
-echo [INFO] Checking if backend is running...
-curl -s http://localhost:5000/api/health >nul 2>&1
-if errorlevel 1 (
-    echo [WARNING] Backend server is not running
-    echo Start it in another terminal using: cd backend ^&^& python app.py
-    echo.
-)
-
-REM Start React development server
+REM Start Flask server
 echo.
 echo ================================
-echo [INFO] Starting React development server...
+echo [INFO] Starting Flask server...
 echo ================================
 echo.
-echo Application will open at: http://localhost:3000
+echo Server will run at: http://localhost:5000
 echo Press Ctrl+C to stop the server
 echo.
 
-call npm start
+python app.py
 
 pause
